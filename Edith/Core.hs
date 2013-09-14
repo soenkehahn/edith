@@ -9,13 +9,14 @@ import Data.Monoid
 import "mtl" Control.Monad.State
 import UI.NCurses
 
+import Edith.Buffer
+
 
 type Edith a = StateT EState Curses a
 
 data EState = EState {
-    cursorPosition_ :: (Integer, Integer),
     filePath :: FilePath,
-    buffer :: String,
+    buffer_ :: Buffer,
 
     handler :: Handler
   }
@@ -51,7 +52,7 @@ waitFor w = loop
         state <- get
         case (getHandler (handler state)) event of
             Nothing -> do
-                status ("unknown event: " ++ show event)
+                -- ~ status ("unknown event: " ++ show (show event))
                 loop
             Just (action, mNewHandler) -> do
                 action
@@ -63,12 +64,12 @@ waitFor w = loop
 
 updateGUI :: Edith ()
 updateGUI = do
-    b <- buffer <$> get
+    b <- (contents_ . buffer_) <$> get
     lift $ do
         def <- defaultWindow
         (height, width) <- screenSize
         updateWindow def $ do
-            forM_ (zip (lines b) [0 .. (height - 3)]) $ \ (line, n) -> do
+            forM_ (zip b [0 .. (height - 3)]) $ \ (line, n) -> do
                 moveCursor n 0
                 drawString (line ++ replicate (fromIntegral width) ' ')
             moveCursor (height - 2) 0
@@ -78,7 +79,7 @@ updateGUI = do
 
 resetCursor :: Edith ()
 resetCursor = do
-    position <- cursorPosition_ <$> get
+    position <- cursorPosition_ . buffer_ <$> get
     lift $ do
         def <- defaultWindow
         updateWindow def $ do
