@@ -6,6 +6,7 @@ module Edith.Core where
 import Control.Applicative
 import Data.Accessor
 import Data.Accessor.Template
+import Data.Char
 import Data.Monoid
 import "mtl" Control.Monad.State
 import UI.NCurses
@@ -75,11 +76,15 @@ updateGUI = do
         updateWindow def $ do
             forM_ (zip b [0 .. (height - 3)]) $ \ (line, n) -> do
                 moveCursor n 0
-                drawString (line ++ replicate (fromIntegral width) ' ')
+                drawString (map sanitizeChar line ++ replicate (fromIntegral width) ' ')
             moveCursor (height - 2) 0
             drawLineH Nothing width -- glyphLineH
     resetCursor
     lift $ render
+  where
+    sanitizeChar :: Char -> Char
+    sanitizeChar c | isPrint c = c
+    sanitizeChar _ = '�'
 
 resetCursor :: Edith ()
 resetCursor = do
