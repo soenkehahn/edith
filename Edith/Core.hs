@@ -4,6 +4,7 @@ module Edith.Core where
 
 
 import Control.Applicative
+import Data.Accessor
 import Data.Accessor.Template
 import Data.Monoid
 import "mtl" Control.Monad.State
@@ -52,7 +53,7 @@ waitFor w = loop
         state <- get
         case (getHandler (handler state)) event of
             Nothing -> do
-                -- ~ status ("unknown event: " ++ show (show event))
+                status ("unknown event: " ++ show (show event))
                 loop
             Just (action, mNewHandler) -> do
                 action
@@ -79,6 +80,7 @@ updateGUI = do
 
 resetCursor :: Edith ()
 resetCursor = do
+    buffer %: sanitizeCursorPosition
     position <- cursorPosition_ . buffer_ <$> get
     lift $ do
         def <- defaultWindow

@@ -18,7 +18,7 @@ import Edith.Buffer as Buffer
 saveFile :: Edith ()
 saveFile = do
     e <- get
-    liftIO $ writeFile (filePath e) (unlines $ contents_ $ buffer_ e)
+    liftIO $ writeFile (filePath e) (unlines $ init $ contents_ $ buffer_ e)
     status "saved"
 
 arrowKeysCursorMovement :: Handler

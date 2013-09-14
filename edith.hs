@@ -17,7 +17,7 @@ import qualified Edith.Buffer
 main :: IO ()
 main = do
     [file] <- getArgs
-    buffer <- Edith.Buffer.Buffer (0, 0) <$> lines <$> readFile file
+    buffer <- Edith.Buffer.bufferFromFile file
     deepseq buffer (return ())
     let state = EState file buffer myHandler
     runEdith state

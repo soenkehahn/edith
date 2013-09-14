@@ -3,6 +3,8 @@
 module Edith.Buffer where
 
 
+import Control.Monad.IO.Class
+import Control.Applicative
 import Data.List
 import Data.Monoid
 import Data.Accessor
@@ -20,6 +22,26 @@ instance NFData Buffer where
 
 $( deriveAccessors ''Buffer )
 
+sanitizeCursorPosition :: Buffer -> Buffer
+sanitizeCursorPosition buffer =
+    cursorPosition ^: (
+        (firstA ^: (min maxLine . max 0)) .
+        (secondA ^: (min maxCol . max 0))
+        ) $
+    buffer
+  where
+    maxLine, maxCol :: Integer
+    maxLine = pred $ genericLength (buffer ^. contents)
+    maxCol =
+        genericLength ((buffer ^. contents) !! fromIntegral line)
+    (line, col) =
+        firstA ^: (max 0 . min maxLine) $
+        (buffer ^. cursorPosition)
+
+bufferFromFile :: MonadIO m => FilePath -> m Buffer
+bufferFromFile file = liftIO $ do
+    contents <- lines <$> readFile file
+    return (Buffer (0, 0) (contents ++ [""]))
 
 insertCharacter :: Char -> Buffer -> Buffer
 insertCharacter c buffer =
