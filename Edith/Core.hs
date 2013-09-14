@@ -16,6 +16,8 @@ import Edith.Buffer
 type Edith a = StateT EState Curses a
 
 data EState = EState {
+    exitFlag_ :: Bool,
+
     filePath :: FilePath,
     buffer_ :: Buffer,
 
@@ -41,10 +43,10 @@ runEdith :: EState -> IO ()
 runEdith state = runCurses $ flip evalStateT state $ do
     lift $ setEcho False
     w <- lift $ defaultWindow
-    waitFor w
+    mainLoop w
 
-waitFor :: Window -> Edith ()
-waitFor w = loop
+mainLoop :: Window -> Edith ()
+mainLoop w = loop
   where
     loop = do
         updateGUI
@@ -61,7 +63,8 @@ waitFor w = loop
                     Just newHandler ->
                         modify (\ s -> s{handler = newHandler})
                     Nothing -> return ()
-                loop
+                shouldExit <- exitFlag_ <$> get
+                when (not shouldExit) loop
 
 updateGUI :: Edith ()
 updateGUI = do

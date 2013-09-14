@@ -15,6 +15,9 @@ import Edith.Core
 import Edith.Buffer as Buffer
 
 
+exit :: Edith ()
+exit = exitFlag %= True
+
 saveFile :: Edith ()
 saveFile = do
     e <- get
