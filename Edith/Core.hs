@@ -10,6 +10,7 @@ import Data.Char
 import Data.Monoid
 import "mtl" Control.Monad.State
 import UI.NCurses
+import Text.Printf
 
 import Edith.Buffer
 
@@ -79,9 +80,11 @@ updateGUI = do
         updateWindow def $ do
             forM_ (zip dBuffer [0 ..]) $ \ ((lineNumber, line), cursorLine) -> do
                 moveCursor cursorLine 0
-                drawString (map sanitizeChar line ++ replicate (fromIntegral width) ' ')
+                drawString (printf "%5i # " lineNumber ++ map sanitizeChar line ++ replicate (fromIntegral width) ' ')
             moveCursor (height - 2) 0
             drawLineH Nothing width -- glyphLineH
+            moveCursor 0 6
+            drawLineV Nothing bufferHeight
     resetCursor bufferHeight
     lift $ render
   where
@@ -89,7 +92,7 @@ updateGUI = do
     sanitizeChar c | isPrint c = c
     sanitizeChar _ = '�'
 
--- ~ resetCursor :: Edith ()
+resetCursor :: Integer -> Edith ()
 resetCursor bufferHeight = do
     position <- scrolledCursorPosition . buffer_ <$> get
     when (fst position > bufferHeight) $
@@ -97,7 +100,7 @@ resetCursor bufferHeight = do
     lift $ do
         def <- defaultWindow
         updateWindow def $ do
-            uncurry moveCursor position
+            uncurry moveCursor (secondA ^: (+ 8) $ position)
 
 
 status :: String -> Edith ()
