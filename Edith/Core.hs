@@ -124,3 +124,6 @@ c ==%: action = EventCharacter c =%: action
 
 (=:) :: Event -> Edith () -> Handler
 event =: action = event =%: (action, Nothing)
+
+(==:) :: Char -> Edith () -> Handler
+c ==: action = c ==%: (action, Nothing)

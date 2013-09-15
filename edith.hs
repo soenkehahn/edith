@@ -25,19 +25,10 @@ main = do
 
 myHandler :: Handler
 myHandler = mconcat $
-    (EventSpecialKey KeyInsertCharacter) =%:
-        (status "command-mode", Just commandHandler) :
+    '\DC3' ==: saveFile : -- Ctrl + S
+    '\DC1' ==: exit :     -- Ctrl + Q
     arrowKeysCursorMovements :
     homeEndMovements myHandler :
     backspaceHandler :
     insertCharacter :
     []
-
-commandHandler :: Handler
-commandHandler = mconcat $
-    's' ==%: (saveFile, Just myHandler) :
-    'e' ==%: (exit, Nothing) :
-    []
-
-
-
