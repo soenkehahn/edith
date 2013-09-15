@@ -12,6 +12,7 @@ import Control.DeepSeq
 import Edith.Core
 import Edith.Actions
 import qualified Edith.Buffer
+import Edith.BuildScripts (buildScriptHandler)
 
 
 main :: IO ()
@@ -33,6 +34,8 @@ myHandler = mconcat $
     deleteHandler :
 
     logResizer :
+
+    buildScriptHandler :
 
     insertCharacter :
     []
