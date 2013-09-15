@@ -22,16 +22,17 @@ buildScriptHandler = mconcat $
 runCurrentBuildScript :: Edith ()
 runCurrentBuildScript = do
     saveFile
+    status ("running build.sh...")
     cwd <- liftIO $ getCurrentDirectory
     (exitCode, stdout, stderr) <- liftIO $ readProcessWithExitCode (cwd </> "build.sh") [] ""
     liftIO $ do
         appendFile "build.log" stdout
         appendFile "build.log" stderr
-    status ("running build.sh...")
-    updateGUI
     forM_ (lines stdout ++ lines stderr) $ status
     case exitCode of
         ExitFailure ec -> do
             status ("error: " ++ show ec)
         ExitSuccess ->
             status "success"
+
+

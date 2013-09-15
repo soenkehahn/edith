@@ -80,7 +80,6 @@ updateGUI = do
     let bufferHeight = height - logHeightt - 1
     buffer %: sanitizeScrolling bufferHeight
     dBuffer <- displayBuffer bufferHeight . buffer_ <$> get
-    logLines <- log_ <$> get
     lift $ do
         def <- defaultWindow
         updateWindow def $ do
@@ -96,11 +95,7 @@ updateGUI = do
             drawLineV Nothing bufferHeight
             moveCursor bufferHeight 0
             drawLineH Nothing width
-            forM_ (zip (genericTake logHeightt logLines) [0 ..]) $ \ ((lineNumber, line), i) -> do
-                moveCursor (pred height - i) 0
-                drawString (printf "%5i # %s" lineNumber line)
-            moveCursor (height - logHeightt) 6
-            drawLineV Nothing logHeightt
+    redrawLog
     resetCursor bufferHeight
     lift $ render
   where
@@ -119,13 +114,31 @@ resetCursor bufferHeight = do
             uncurry moveCursor (secondA ^: (+ 8) $ position)
 
 
+redrawLog :: Edith ()
+redrawLog = do
+    logHeightt <- logHeight_ <$> get
+    logLines <- log_ <$> get
+    lift $ do
+        (height, width) <- screenSize
+        def <- defaultWindow
+        updateWindow def $ do
+            forM_ (zip (genericTake logHeightt logLines) [0 ..]) $ \ ((lineNumber, line), i) -> do
+                moveCursor (pred height - i) 0
+                drawString (replicate (fromIntegral $ pred width) ' ')
+                moveCursor (pred height - i) 0
+                drawString (printf "%5i # %s" lineNumber line)
+            moveCursor (height - logHeightt) 6
+            drawLineV Nothing logHeightt
+
 status :: String -> Edith ()
-status msg =
+status msg = do
     log %: (\ l ->
         case l of
             ((n, last) : r) ->
                 (succ n, msg) : (n, last) : r
             [] -> [(0, msg)])
+    redrawLog
+    lift render
 
 
 -- * convenience
@@ -142,3 +155,6 @@ event =: action = event =%: (action, Nothing)
 
 (==:) :: Char -> Edith () -> Handler
 c ==: action = c ==%: (action, Nothing)
+
+
+
