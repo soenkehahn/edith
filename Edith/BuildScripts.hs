@@ -11,6 +11,7 @@ import System.Directory
 import Data.Foldable
 
 import Edith.Core
+import Edith.Actions
 
 
 buildScriptHandler :: Handler
@@ -20,6 +21,7 @@ buildScriptHandler = mconcat $
 
 runCurrentBuildScript :: Edith ()
 runCurrentBuildScript = do
+    saveFile
     cwd <- liftIO $ getCurrentDirectory
     (exitCode, stdout, stderr) <- liftIO $ readProcessWithExitCode (cwd </> "build.sh") [] ""
     liftIO $ do
