@@ -27,7 +27,8 @@ myHandler :: Handler
 myHandler = mconcat $
     (EventSpecialKey KeyInsertCharacter) =%:
         (status "command-mode", Just commandHandler) :
-    arrowKeysCursorMovement :
+    arrowKeysCursorMovements :
+    homeEndMovements myHandler :
     backspaceHandler :
     insertCharacter :
     []

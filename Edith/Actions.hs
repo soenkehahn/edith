@@ -24,13 +24,28 @@ saveFile = do
     liftIO $ writeFile (filePath e) (unlines $ init $ contents_ $ buffer_ e)
     status "saved"
 
-arrowKeysCursorMovement :: Handler
-arrowKeysCursorMovement = mconcat $
+arrowKeysCursorMovements :: Handler
+arrowKeysCursorMovements = mconcat $
     EventSpecialKey KeyUpArrow    =: (buffer .> cursorPosition %: first  pred) :
     EventSpecialKey KeyDownArrow  =: (buffer .> cursorPosition %: first  succ) :
     EventSpecialKey KeyLeftArrow  =: (buffer .> cursorPosition %: second pred) :
     EventSpecialKey KeyRightArrow =: (buffer .> cursorPosition %: second succ) :
     []
+
+homeEndMovements :: Handler -> Handler
+homeEndMovements parent =
+    '\ESC' ==%: (,) (return ()) (Just $ mconcat $
+        'O' ==%: (,) (return ()) (Just $ mconcat $
+            'F' ==%: (buffer %: endMovement, Just parent) :
+            'H' ==%: (buffer %: homeMovement, Just parent) :
+            toParent :
+            []
+        ) :
+        toParent :
+        []
+    )
+  where
+    toParent = Handler $ const $ Just (status "back", Just parent)
 
 backspaceHandler :: Handler
 backspaceHandler =

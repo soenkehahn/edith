@@ -130,3 +130,16 @@ firstA = accessor fst (\ a (_, b) -> (a, b))
 
 secondA :: Accessor (a, b) b
 secondA = accessor snd (\ b (a, _) -> (a, b))
+
+
+endMovement :: Buffer -> Buffer
+endMovement buffer =
+    cursorPosition .> secondA ^= lineLength $
+    buffer
+  where
+    lineLength = genericLength ((buffer ^. contents) !! fromIntegral line)
+    line = buffer ^. cursorPosition .> firstA
+
+homeMovement :: Buffer -> Buffer
+homeMovement =
+    cursorPosition .> secondA ^= 0
