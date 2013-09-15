@@ -7,10 +7,12 @@ import Control.Applicative
 import Data.Accessor
 import Data.Accessor.Template
 import Data.Char
+import Data.List
 import Data.Monoid
 import "mtl" Control.Monad.State
-import UI.NCurses
+import Prelude hiding (log)
 import Text.Printf
+import UI.NCurses
 
 import Edith.Buffer
 
@@ -19,6 +21,8 @@ type Edith a = StateT EState Curses a
 
 data EState = EState {
     exitFlag_ :: Bool,
+    logHeight_ :: Integer,
+    log_ :: [(Integer, String)],
 
     filePath :: FilePath,
     buffer_ :: Buffer,
@@ -72,19 +76,24 @@ updateGUI :: Edith ()
 updateGUI = do
     buffer %: sanitizeCursorPosition
     (height, width) <- lift screenSize
-    let bufferHeight = height - 2
+    logHeightt <- logHeight_ <$> get
+    let bufferHeight = height - logHeightt - 1
     buffer %: sanitizeScrolling bufferHeight
     dBuffer <- displayBuffer bufferHeight . buffer_ <$> get
+    logLines <- log_ <$> get
     lift $ do
         def <- defaultWindow
         updateWindow def $ do
             forM_ (zip dBuffer [0 ..]) $ \ ((lineNumber, line), cursorLine) -> do
                 moveCursor cursorLine 0
                 drawString (printf "%5i # " lineNumber ++ map sanitizeChar line ++ replicate (fromIntegral width) ' ')
-            moveCursor (height - 2) 0
-            drawLineH Nothing width -- glyphLineH
             moveCursor 0 6
             drawLineV Nothing bufferHeight
+            moveCursor bufferHeight 0
+            drawLineH Nothing width
+            forM_ (zip (genericTake logHeightt logLines) [0 ..]) $ \ ((lineNumber, line), i) -> do
+                moveCursor (pred height - i) 0
+                drawString (printf "%5i # %s" lineNumber line)
     resetCursor bufferHeight
     lift $ render
   where
@@ -104,13 +113,12 @@ resetCursor bufferHeight = do
 
 
 status :: String -> Edith ()
-status msg = do
-    lift $ do
-        (height, _) <- screenSize
-        def <- defaultWindow
-        updateWindow def $ do
-            moveCursor (height - 1) 0
-            drawString (msg ++ replicate (fromIntegral height) ' ')
+status msg =
+    log %: (\ l ->
+        case l of
+            ((n, last) : r) ->
+                (succ n, msg) : (n, last) : r
+            [] -> [(0, msg)])
 
 
 -- * convenience

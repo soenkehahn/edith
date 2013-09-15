@@ -19,7 +19,7 @@ main = do
     [file] <- getArgs
     buffer <- Edith.Buffer.bufferFromFile file
     deepseq buffer (return ())
-    let state = EState False file buffer myHandler
+    let state = EState False 4 [] file buffer myHandler
     runEdith state
 
 
