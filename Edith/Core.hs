@@ -82,7 +82,6 @@ updateGUI = do
                 drawString (map sanitizeChar line ++ replicate (fromIntegral width) ' ')
             moveCursor (height - 2) 0
             drawLineH Nothing width -- glyphLineH
-    status =<< (show . scrolling_ . buffer_) <$> get
     resetCursor bufferHeight
     lift $ render
   where
