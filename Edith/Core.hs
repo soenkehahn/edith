@@ -69,27 +69,32 @@ mainLoop w = loop
 
 updateGUI :: Edith ()
 updateGUI = do
-    b <- (contents_ . buffer_) <$> get
+    buffer %: sanitizeCursorPosition
+    (height, width) <- lift screenSize
+    let bufferHeight = height - 2
+    buffer %: sanitizeScrolling bufferHeight
+    dBuffer <- displayBuffer bufferHeight . buffer_ <$> get
     lift $ do
         def <- defaultWindow
-        (height, width) <- screenSize
         updateWindow def $ do
-            forM_ (zip b [0 .. (height - 3)]) $ \ (line, n) -> do
-                moveCursor n 0
+            forM_ (zip dBuffer [0 ..]) $ \ ((lineNumber, line), cursorLine) -> do
+                moveCursor cursorLine 0
                 drawString (map sanitizeChar line ++ replicate (fromIntegral width) ' ')
             moveCursor (height - 2) 0
             drawLineH Nothing width -- glyphLineH
-    resetCursor
+    status =<< (show . scrolling_ . buffer_) <$> get
+    resetCursor bufferHeight
     lift $ render
   where
     sanitizeChar :: Char -> Char
     sanitizeChar c | isPrint c = c
     sanitizeChar _ = '�'
 
-resetCursor :: Edith ()
-resetCursor = do
-    buffer %: sanitizeCursorPosition
-    position <- cursorPosition_ . buffer_ <$> get
+-- ~ resetCursor :: Edith ()
+resetCursor bufferHeight = do
+    position <- scrolledCursorPosition . buffer_ <$> get
+    when (fst position > bufferHeight) $
+        error (show position)
     lift $ do
         def <- defaultWindow
         updateWindow def $ do

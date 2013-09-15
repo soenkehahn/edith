@@ -13,12 +13,13 @@ import Control.DeepSeq
 
 
 data Buffer = Buffer {
+    scrolling_ :: Integer,
     cursorPosition_ :: (Integer, Integer),
     contents_ :: [String]
   }
 
 instance NFData Buffer where
-    rnf (Buffer a b) = rnf a `seq` rnf b `seq` ()
+    rnf (Buffer a b c) = rnf a `seq` rnf b `seq` rnf c `seq` ()
 
 $( deriveAccessors ''Buffer )
 
@@ -38,10 +39,40 @@ sanitizeCursorPosition buffer =
         firstA ^: (max 0 . min maxLine) $
         (buffer ^. cursorPosition)
 
+
+displayBuffer :: Integer -> Buffer -> [(Integer, String)]
+displayBuffer height buffer =
+    genericTake height $
+    zip [buffer ^. scrolling .. ] $
+    genericDrop (buffer ^. scrolling) $
+    (buffer ^. contents)
+
+
+-- * Scrolling
+
+sanitizeScrolling :: Integer -> Buffer -> Buffer
+sanitizeScrolling height buffer =
+    if fst (cursorPosition_ buffer) >= (scrolling_ buffer + height) then
+        sanitizeScrolling height $
+        scrolling ^: succ $
+        buffer
+    else if fst (cursorPosition_ buffer) < scrolling_ buffer then
+        sanitizeScrolling height $
+        scrolling ^: pred $
+        buffer
+    else
+        buffer
+
+scrolledCursorPosition :: Buffer -> (Integer, Integer)
+scrolledCursorPosition buffer =
+    firstA ^: (subtract (buffer ^. scrolling)) $
+    buffer ^. cursorPosition
+
+
 bufferFromFile :: MonadIO m => FilePath -> m Buffer
 bufferFromFile file = liftIO $ do
     contents <- lines <$> readFile file
-    return (Buffer (0, 0) (contents ++ [""]))
+    return (Buffer 0 (0, 0) (contents ++ [""]))
 
 insertCharacter :: Char -> Buffer -> Buffer
 insertCharacter c buffer =
