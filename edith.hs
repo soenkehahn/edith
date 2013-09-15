@@ -30,5 +30,7 @@ myHandler = mconcat $
     arrowKeysCursorMovements :
     homeEndMovements myHandler :
     backspaceHandler :
+    deleteHandler :
     insertCharacter :
     []
+

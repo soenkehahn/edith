@@ -51,6 +51,10 @@ backspaceHandler :: Handler
 backspaceHandler =
     EventSpecialKey KeyBackspace =: (buffer %: backspace)
 
+deleteHandler :: Handler
+deleteHandler =
+    EventSpecialKey KeyDeleteCharacter =: (buffer %: delete)
+
 insertCharacter :: Handler
 insertCharacter = Handler $ \ event ->
     case event of

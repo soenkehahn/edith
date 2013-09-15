@@ -109,6 +109,25 @@ backspace buffer =
   where
     (line, col) = buffer ^. cursorPosition
 
+delete :: Buffer -> Buffer
+delete buffer =
+    if col >= lineLength then
+        if line >= pred bufferLength then
+            buffer
+          else
+            -- alter cursor position?
+            contents ^: mergeLines line $
+            buffer
+      else
+        -- cursor position?
+        contents ^: modByIndex line (deleteByIndex col) $
+        buffer
+  where
+    (line, col) = buffer ^. cursorPosition
+    lineLength = genericLength ((buffer ^. contents) !! fromIntegral line)
+    bufferLength = genericLength (buffer ^. contents)
+
+
 modByIndex :: Integer -> (a -> a) -> [a] -> [a]
 modByIndex 0 f (a : r) = f a : r
 modByIndex n f (a : r) = a : modByIndex (pred n) f r
