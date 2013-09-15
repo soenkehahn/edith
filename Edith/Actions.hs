@@ -18,6 +18,11 @@ import Edith.Buffer as Buffer
 exit :: Edith ()
 exit = exitFlag %= True
 
+logResizer :: Handler
+logResizer =
+    ('\a' ==: (logHeight %: succ)) <>
+    ('\b' ==: (logHeight %: ((max 0) . pred)))
+
 saveFile :: Edith ()
 saveFile = do
     e <- get

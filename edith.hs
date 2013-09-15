@@ -31,6 +31,9 @@ myHandler = mconcat $
     homeEndMovements myHandler :
     backspaceHandler :
     deleteHandler :
+
+    logResizer :
+
     insertCharacter :
     []
 
