@@ -76,11 +76,20 @@ bufferFromFile file = liftIO $ do
 
 insertCharacter :: Char -> Buffer -> Buffer
 insertCharacter c buffer =
+    sanitizeNewlines $
     cursorPosition .> secondA ^: succ $
     contents ^: modByIndex line (insertByIndex col c) $
     buffer
   where
     (line, col) = buffer ^. cursorPosition
+
+    sanitizeNewlines :: Buffer -> Buffer
+    sanitizeNewlines = if c == '\n' then
+        (cursorPosition .> secondA ^= 0) .
+        (cursorPosition .> firstA ^: succ) .
+        (contents ^: ((++ [""]) . lines . unlines))
+      else id
+
 
 backspace :: Buffer -> Buffer
 backspace buffer =
