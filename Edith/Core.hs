@@ -84,6 +84,11 @@ updateGUI = do
     lift $ do
         def <- defaultWindow
         updateWindow def $ do
+            -- clear everything
+            forM_ [0 .. pred height] $ \ lineNumber -> do
+                moveCursor lineNumber 0
+                drawString (replicate (fromIntegral $ pred width) ' ')
+
             forM_ (zip dBuffer [0 ..]) $ \ ((lineNumber, line), cursorLine) -> do
                 moveCursor cursorLine 0
                 drawString (printf "%5i # " lineNumber ++ map sanitizeChar line ++ replicate (fromIntegral width) ' ')
