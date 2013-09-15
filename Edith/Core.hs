@@ -94,6 +94,8 @@ updateGUI = do
             forM_ (zip (genericTake logHeightt logLines) [0 ..]) $ \ ((lineNumber, line), i) -> do
                 moveCursor (pred height - i) 0
                 drawString (printf "%5i # %s" lineNumber line)
+            moveCursor (height - logHeightt) 6
+            drawLineV Nothing logHeightt
     resetCursor bufferHeight
     lift $ render
   where
